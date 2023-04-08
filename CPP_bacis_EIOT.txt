@@ -1,0 +1,611 @@
+C++ concepts for IoT 
+
+smart pointers (unique_ptr and shared_ptr)
+regex
+std::functions and lambdas
+auto and decltype keywords
+rvalue references and std::move operations
+constexpr
+range-for loops
+raw strings
+user-defined literals
+new order of evaluation rules
+initializers for if and switch
+guaranteed copy elision
+std::any
+std::optional
+std::variant
+std::filesystem
+std::string_view
+[[fallthrough]] and [[nodiscard]] attributes
+
+tools/softwares:
+MQTT
+Paho/ mosquitto client for MQTT5
+spdlog (popular and fast logging libraries for C++ is spdlog )
+Gmock - Google's C++ Mocking Framework or GMock for short, is an open sourced, free and extendible library for creating fake objects, use them, set behavior on them without the need to change the class with each and every test
+Gtest framework - GoogleTest is Google's C++ testing and mocking framework.
+
+dispatcher (to know based on the incoming message, assign to respective message handler)
+message handler (registrtaion, job, etc)
+
+
+smart pointers (unique_ptr and shared_ptr):
+============================================
+unique_ptr:
+std::unique_ptr<int> p1 = make_unique<int> (100);
+vec.push_back(std::move(p1));  //only MOVE supported, does not support copy 
+p1.get()  //dereference
+p1. reset(p2) // changin the pointer to a new
+p3 = p1.release()  //release ownership to p3
+
+shared_ptr:
+std::shared_ptr<int> p1 {new int {100}};
+std::cout << p1.use_count() << std::endl;   //1
+std::shared_ptr<int> p2 {p1};  //copy constructor  // shared ownership
+std::cout << p1.use_count() << std::endl;   //2
+
+
+
+regex:
+=======
+https://www.youtube.com/watch?v=9K4N6MO_R1Y
+https://www.youtube.com/watch?v=NPccLyAHD6Y (greedy vs lazy, string boundry, word boundry)
+https://www.youtube.com/watch?v=tsR2rNTX3D0 (back References)
+
+// [ ]   : Match what is in the brackets
+// [^ ]  : Match anything not in the brackets
+// ( )   : Return surrounded submatch
+// .     : Match any 1 character or space
+// +     : Match 1 or more of what proceeds
+// ?     : Match 0 or 1
+// *     : Match 0 or More
+// *?    : Lazy match the smallest match
+// \b    : Word boundary
+// ^     : Beginning of String
+// $     : End of String
+// \n    : Newline
+// \d    : Any 1 number
+// \D    : Anything but a number
+// \w    : Same as [a-zA-Z0-9_]
+// \W    : Same as [^a-zA-Z0-9_]
+// \s    : Same as [\f\n\r\t\v]
+// \S    : Same as [^\f\n\r\t\v]
+// {5}   : Match 5 of what proceeds the curly brackets
+// {5,7} : Match values that are between 5 and 7 in length
+
+#include <iostream>
+#include <regex>
+
+int main() {
+    std::string text = "The quick brown fox jumps over the lazy dog.";
+    std::regex vowel_regex("[aeiou]");  // the regex to search
+
+    // Find the first vowel in the text
+    std::smatch match;   //search and store the string
+    if (std::regex_search(text, match, vowel_regex)) {
+        std::cout << "Found vowel '" << match.str() << "' at position " << match.position() << std::endl;
+        std::cout << "Is there a match: " << match.ready() << "\n";
+        std::cout << "Number of matches: " << match.size() << "\n";		
+    }
+
+    return 0;
+}
+
+regular expressions in C++11 follow the ECMAScript grammar, which is similar to the regular expression syntax used in JavaScript and Perl. The full syntax for ECMAScript regular expressions can be found in the C++11 standard.
+
+
+
+
+std::functions and lambdas:
+============================
+https://www.youtube.com/watch?v=EwLHcF5w4oU
+https://www.youtube.com/watch?v=wd2LyLfvkVw
+
+lamda - unamed/anonymous function
+[] () ->return_type  specifiers{};
+[] - capture closure
+() - paramter list (optional)
+{} - method definition, logic
+return_type - if return any, if void leave blank
+specifers - mutable or constexpr
+Exception - use "noexcept" to handle exception
+
+#include <string>
+#include <iostream>
+
+int main() {
+    
+    auto add = [](auto x, auto y) { return x+y; };
+    int a {1},b {2};
+    std::string str1 {"Test"}, str2 {" Finite"};
+    
+    std::cout << add (a, b) << std::endl;
+    std::cout << add (str1, str2) << std::endl;
+    
+    return 0;
+
+}
+
+std::function objects(functor)
+----------------------------
+https://www.go4expert.com/articles/cpp-closures-functors-lamdas-stdfunction-t34654/
+https://www.go4expert.com/articles/cpp-closures-functors-lamdas-stdfunction-t34654/
+
+
+When to use lambda: when the amount of code is a statement or a few statements
+if more complex code, consider using function object
+2. one another benefit of using lambda is the compiler creates a closure object from the lambda expression
+this would mean we could access the environment in which the lamda exists
+
+
+Function pointer:
+=================
+Function pointer stores the address of another function
+
+
+auto and decltype keywords:
+============================
+auto:
+auto is not an actual type but an instruction to compiler to deduce the actual type.The auto keyword is used to declare a variable with automatic type inference.
+The auto and decltype keywords are features introduced in C++11 to improve type inference and make code more concise and maintainable.
+auto and decltype are C++11 features that allow for automatic type inference and compile-time type deduction, respectively. They are useful for writing generic code that can work with different types and can make code more concise and maintainable.
+
+//by coding standards the below are not recommeneded, just use int i = 42
+auto i = 42;  // i is deduced as an int
+auto d = 3.14;  // d is deduced as a double
+
+std::vector<int> v = {1, 2, 3, 4};
+for (auto& i : v) {          //automatically deduces the type of the loop variable i as int&, which allows the loop to iterate over a container of any type as long as it supports the range-based for loop syntax.
+    std::cout << i << ' ';
+}
+
+
+The decltype keyword is used to deduce the type of an expression at compile-time. It returns the type of the expression as if it were assigned to a variable. 
+decltype is particularly useful when the type of an expression is complex or dependent on other variables or types.
+For example:
+int i = 0;
+decltype(i) j = i;  // j is deduced as an int
+decltype(i + j) k = i + j;  // k is deduced as an int
+
+stack unwinding:
+================
+Stack unwinding is a mechanism that is used to clean up the program's call stack after an exception is thrown. When an exception is thrown, the program's execution is interrupted and the exception is propagated up the call stack until a matching catch block is found.
+
+
+usage of int32_t and int64_t:
+==============================
+int32_t and int64_t are signed integer data types defined in the C++ standard library header <cstdint>. They are guaranteed to be exactly 32 and 64 bits wide, respectively, regardless of the platform or compiler being used.
+The usage of int32_t and int64_t is useful in situations where precise control over the size of integer types is required. For example, when dealing with binary data formats or when interfacing with hardware that requires specific integer sizes
+
+size_t is an unsigned integer data type that is defined in the C++ standard library header <cstddef>. It is used to represent the size of objects or memory regions, and is typically used for indexing and counting operations. The exact size of size_t can vary depending on the platform and the implementation, but it is guaranteed to be large enough to represent the size of any object that can be allocated in memory.
+
+While size_t is typically used for indexing and counting operations, int32_t and int64_t are typically used for more general integer arithmetic. Additionally, int32_t and int64_t are signed types, which means they can represent negative values, whereas size_t is an unsigned type, which means it cannot represent negative values.
+
+
+rvalue references and std::move operations:
+===========================================
+An rvalue reference is a reference that can only bind to an rvalue, which is a temporary object that is about to be destroyed or has no name. An rvalue reference is denoted by &&. By using rvalue references, C++ can now distinguish between objects that can be safely moved (i.e., objects that are going to be destroyed anyway) and objects that need to be copied.
+
+The std::move() function is a standard library function that takes an object and returns an rvalue reference to it. It does not actually move the object, but instead casts the object to an rvalue reference, which allows it to be passed to functions that accept rvalue references.
+
+Together, rvalue references and std::move() enable "move semantics", which allow objects to be efficiently moved from one place to another without the need for expensive copy operations. Move semantics are especially useful when dealing with large objects that would be expensive to copy
+
+constexpr:
+==========
+constexpr is a powerful tool that can be used to improve the performance and correctness of C++ programs, but it should be used with caution. Not all functions and variables can be evaluated at compile-time, and using constexpr inappropriately can lead to longer compilation times and larger executable sizes.
+constexpr is a keyword introduced in C++11 that allows the evaluation of an expression at compile-time, rather than at run-time. It can be applied to functions and variables, and it indicates that the value of the function or variable can be computed at compile-time if all its arguments are known at compile-time.
+
+constexpr int square(int x) {
+    return x * x;
+}
+
+int main() {
+    constexpr int x = 5;
+    constexpr int y = square(x);
+    return y;
+}
+
+constexpr can also be applied to variables, in which case it indicates that the variable can be initialized at compile-time. For example:
+constexpr int x = 5;
+x is declared constexpr, which means that its value is known at compile-time and cannot be changed at run-time.
+
+range-for loops:
+================
+for (auto& element : range) {
+    // Loop body
+}
+
+In this syntax, element is a variable that takes on the value of each element in the range, which can be any iterable container such as an array, a vector, a map, or a set. The auto keyword allows the type of the element variable to be automatically deduced from the type of the range.
+
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    for (auto& n : numbers) {
+        std::cout << n << std::endl;
+    }
+    return 0;
+}
+Range-for loops provide a more concise and readable alternative to traditional for loops, especially when working with containers and other iterable objects. They can help to reduce the likelihood of off-by-one errors and other common loop-related bugs.
+
+If you use the const keyword before auto& in a range-for loop, the loop variable will be a const reference to the elements in the range, which means that the elements cannot be modified within the loop body.
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    for (const auto& n : numbers) {
+        std::cout << n << std::endl;
+    }
+    return 0;
+}
+In this example, the loop variable n is declared as const auto&, which means that it is a constant reference to the elements in the numbers vector. This ensures that the loop body cannot modify the elements in the vector.
+
+raw strings:
+=============
+In C++, a raw string is a string literal that allows you to include special characters such as escape sequences and quotation marks without having to escape them with a backslash.
+The syntax for a raw string literal is as follows:
+
+R"delimiter(raw_characters)delimiter"
+
+In this syntax, delimiter can be any sequence of characters that does not appear in the raw_characters. The raw_characters can be any sequence of characters, including whitespace, tabs, newlines, and even quotation marks.
+For example:
+#include <iostream>
+
+int main() {
+    std::string str = R"("Hello, \n world!")";
+    std::cout << str << std::endl;
+    return 0;
+}
+
+Raw strings are useful when you need to include long strings of text that contain special characters, such as regular expressions, HTML code, or JSON data. They can help to improve the readability and maintainability of your code by reducing the amount of escaping needed.
+
+user-defined literals:
+======================
+In C++, user-defined literals are a feature that allows you to define custom suffixes for literals of a certain type. This can be used to create more expressive and readable code by defining new syntax for common types or units of measurement.
+
+syntax: 
+return_type operator "" suffix (parameter_list) {
+    // function body
+}
+
+In this syntax, return_type is the type of the literal value, suffix is the custom suffix for the literal, and parameter_list is a list of parameters that the function takes.
+Example:
+constexpr double operator "" _in(long double inches) {
+    return inches * 2.54;
+}
+
+int main() {
+    double length = 12.5_in;
+    std::cout << "Length in centimeters: " << length << std::endl;
+    return 0;
+}
+
+In this example, the operator "" _in function is defined to convert a value in inches to centimeters. The _in suffix can be used to create a more expressive syntax for converting between units of length. The length variable is assigned the value 12.5_in, which is equivalent to 31.75 centimeters.
+
+User-defined literals can be used to define new syntax for many types, including units of measurement, complex numbers, dates, and regular expressions. They can help to improve the readability and maintainability of your code by providing a more natural syntax for common operations. However, they should be used judiciously to avoid creating confusing or ambiguous code.
+
+
+Difference between function overloading and templates:
+======================================================
+So both overloading and template have their equal use.
+
+one line difference to about them is:
+overloading is used when we have various functions, doing SIMILAR operations .
+template is used when we have various functions, doing IDENTICAL operations .
+There is very big differnce between "SIMILAR" and "IDENTICAL".
+
+difference between pointers and references:
+===========================================
+1) memory address - reference does not have its own address, while pointer have their own memory address
+2) Reassignment is not possible with references
+3) pointers can be NULL.
+4) Arithmethic operations - not available for reference. but we can increment a pointer using p++
+5) Indirection - not available for reference. int **prt = &p , even ***prt1 = &ptr // the double pointer holds the address of single pointer. pointers have n-number of indirections.
+
+new order of evaluation rules:
+==============================
+In C++17, there were some changes made to the order of evaluation rules for expressions in certain contexts. Specifically, the rules were changed for the following three contexts:
+Initializer lists
+Function arguments
+Conditional expressions
+
+In these contexts, the order of evaluation of the sub-expressions in an expression is now guaranteed to occur in a left-to-right order. This means that the leftmost sub-expression will always be evaluated before the rightmost sub-expression.
+
+Before C++17, the order of evaluation in these contexts was unspecified, meaning that the compiler was free to evaluate the sub-expressions in any order it chose. This could sometimes lead to unexpected results, particularly in complex expressions where the order of evaluation could affect the final result.
+
+It's worth noting that the left-to-right order of evaluation is still not guaranteed for all expressions in C++. There are still some contexts, such as the order of evaluation of operands in a binary expression, where the order of evaluation is unspecified.
+
+Initializer lists-
+--------------------
+Initializer lists are a feature introduced in C++11 that provide a concise way to initialize objects with a list of values. An initializer list is a list of expressions enclosed in curly braces {}, with each expression separated by a comma.Eg. std::vector<int> myVector = { 1, 2, 3 };
+
+initializers for if and switch:
+===============================
+In C++11 and later, it is possible to use initializer statements in if and switch statements. An initializer statement is a statement that is executed before the condition of the if or switch statement is evaluated.
+
+if (initialization; condition) {
+  // ...
+}
+
+switch (initialization; condition) {
+  case value1:
+    // ...
+    break;
+  case value2:
+    // ...
+    break;
+  // ...
+}
+The initialization statement is executed once, before the condition is evaluated. The condition is the expression that determines whether the body of the if statement or the case block of the switch statement will be executed.
+if (int x = get_value(); x > 0) {
+  // ...
+}
+
+switch (int x = get_value(); x) {
+  case 0:
+    // ...
+    break;
+  case 1:
+    // ...
+    break;
+  // ...
+}
+
+guaranteed copy elision:
+=========================
+Guaranteed copy elision is a feature introduced in C++17 that allows the compiler to optimize away unnecessary copies or moves in certain situations. Specifically, it allows the compiler to elide the copy or move constructor and constructor calls for objects that are returned from a function, or for objects that are being constructed from a prvalue expression.
+
+1. When returning a named object from a function:
+class MyClass {
+public:
+  MyClass() {}
+  MyClass(const MyClass& other) { /* copy constructor */ }
+  MyClass(MyClass&& other) { /* move constructor */ }
+};
+
+MyClass create_object() {
+  MyClass obj;
+  // ...
+  return obj;
+}
+
+int main() {
+  MyClass obj2 = create_object();    //The copy or move constructor is guaranteed to be elided, so obj will be constructed directly in obj2 without making a copy or move.
+  // ...
+  return 0;
+}
+
+elided- 
+--------
+In programming, "elided" typically refers to a process where something is removed or hidden from view, but still takes place behind the scenes. 
+
+Copy elision is the process where the compiler optimizes away unnecessary copies or moves of objects. In some cases, the copy or move constructor for an object can be elided, meaning that it is not actually called by the compiler. Instead, the object is constructed directly in its final destination.
+
+2. When constructing an object from a prvalue expression:
+class MyClass {
+public:
+  MyClass() {}
+  MyClass(const MyClass& other) { /* copy constructor */ }
+  MyClass(MyClass&& other) { /* move constructor */ }
+};
+
+int main() {
+  MyClass obj = MyClass();
+  // ...
+  return 0;
+}
+
+In this example, a temporary object of type MyClass is created by calling the default constructor, and then obj is constructed by calling the copy or move constructor. With guaranteed copy elision, however, the copy or move constructor is guaranteed to be elided, so obj will be constructed directly from the temporary object returned by MyClass() without making a copy or move.
+
+Guaranteed copy elision can help to improve performance and reduce unnecessary copies or moves in certain cases.
+
+std::any:
+=========
+std::any is a class template introduced in C++17 that provides a type-safe container for storing objects of any type, similar to void* in C. Unlike void*, however, std::any provides a type-safe way to store and retrieve objects, making it more robust and easier to use.
+
+#include <any>
+
+std::any a;
+a = 42; // store an integer
+a = "hello"; // store a string
+
+You can also retrieve the stored value by using std::any_cast:
+int i = std::any_cast<int>(a); // retrieve the integer
+std::string s = std::any_cast<std::string>(a); // retrieve the string
+
+If the type you are trying to retrieve does not match the type of the stored value, std::bad_any_cast will be thrown.
+std::any is useful in situations where you need to store values of different types in a single container. For example, you might use std::any to implement a generic configuration system that can store values of different types, or to implement a variant type that can hold one of several different types of values.
+
+difference between std::any and template -
+-------------------------------------------
+std::any and templates are both ways to create generic code that can work with different types. However, they have some important differences.
+
+Templates are a compile-time feature of C++, where a template function or class is instantiated with a specific type at compile-time. This means that templates generate separate code for each type used with them, and the generated code is optimized for the specific type. Templates allow for very efficient code and flexible usage, but they require the type to be known at compile-time.
+
+std::any, on the other hand, is a runtime feature that provides a type-safe container for storing objects of any type. It allows you to store and retrieve objects of different types dynamically at runtime, without knowing the type at compile-time. This makes std::any more flexible than templates, but also potentially less efficient, as the objects stored in an std::any container must be accessed through type erasure techniques at runtime.
+
+Another key difference is that with templates, the type of the object being operated on is known at compile-time, and can be used to determine the behavior of the code. With std::any, the type of the stored object is not known until runtime, which means that the behavior of the code must be determined dynamically based on the actual type of the object being stored.
+
+In summary, templates are a compile-time feature that generate specialized code for specific types, while std::any is a runtime feature that provides a type-safe container for storing objects of any type, but with potentially less efficiency due to type erasure. The choice between the two depends on the specific requirements of the program and the trade-offs between efficiency and flexibility.
+
+std::optional:
+==============
+std::optional is a class template introduced in C++17 that provides a way to represent an object that may or may not exist. It is a type-safe alternative to using a null pointer, and provides a more expressive and robust way to handle optional values in C++.
+
+To use std::optional, you first need to include the <optional> header:
+#include <optional>
+
+You can then declare an std::optional object and assign a value to it, or leave it uninitialized:
+std::optional<int> opt; // uninitialized
+std::optional<int> opt2 = 42; // initialized with 42
+
+You can check whether an std::optional object is initialized or not using the has_value() method:
+if (opt.has_value()) {
+    // the object is initialized
+}
+
+You can also retrieve the value of an std::optional object using the value() method, which returns a reference to the stored value. If the object is not initialized, std::bad_optional_access will be thrown:
+int i = opt2.value(); // retrieve the value
+
+std::optional is useful in situations where a value might or might not be present, and you want to avoid the use of null pointers. For example, you might use std::optional to represent an optional configuration parameter that may or may not be specified, or to represent the result of a function that may or may not have succeeded.
+
+std::variant:
+=============
+std::variant is a class template introduced in C++17 that provides a type-safe way to represent a value that can be one of several different types, also known as a discriminated union or a tagged union. It is similar to a C union, but with type safety and other features.
+
+#include <variant>
+
+You can then declare an std::variant object with a list of possible types, and assign a value to it:
+
+std::variant<int, std::string> v = "hello";
+
+The type of the object stored in the std::variant object can be determined using the index() method, which returns an index representing the type of the value:
+
+if (v.index() == 0) {
+    // the value is an int
+} else if (v.index() == 1) {
+    // the value is a string
+}
+
+You can also retrieve the value of an std::variant object using the get() method, which returns a reference to the stored value. If the type of the value does not match the type specified in the get() call, std::bad_variant_access will be thrown:
+
+std::string s = std::get<std::string>(v); // retrieve the string value
+
+std::variant is useful in situations where a value can be one of several different types, and you want to avoid the use of a separate flag or union to track the type of the value. For example, you might use std::variant to represent a message that can be one of several different types, or to represent a configuration option that can take on different types of values.
+
+std::filesystem:
+================
+std::filesystem is a C++ standard library introduced in C++17 that provides an object-oriented interface to manipulate files, directories, and paths.
+
+std::filesystem is designed to be a more modern and comprehensive replacement for the previous C-style file and directory manipulation functions, such as fopen(), mkdir(), and opendir(). It also incorporates features from the Boost.Filesystem library.
+
+With std::filesystem, you can easily manipulate paths, files, and directories using classes such as std::filesystem::path, std::filesystem::file_status, std::filesystem::directory_entry, and others. The library supports various operations, such as creating, renaming, deleting, copying, moving, and querying the state of files and directories.
+
+#include <filesystem>
+#include <iostream>
+
+namespace fs = std::filesystem;
+
+int main()
+{
+    fs::path directory = "/path/to/directory";
+    for (const auto& entry : fs::directory_iterator(directory))
+    {
+        std::cout << entry.path() << std::endl;
+    }
+    return 0;
+}
+This program will list all files in the directory specified by the directory variable.
+
+std::string_view:
+=================
+std::string_view is a C++ standard library class introduced in C++17 that provides a non-owning, read-only view of a sequence of characters within a std::string or a character array. It allows you to efficiently pass around and manipulate substrings without copying or modifying the original string or array.
+
+std::string_view is useful when you need to operate on a string or a character array but don't want to allocate memory for a new string or modify the existing one. It can be used in place of const char* and const std::string& parameters in functions that accept read-only strings or substrings.
+
+Here's an example of using std::string_view to pass a substring to a function:
+#include <iostream>
+#include <string_view>
+
+void printSubstring(std::string_view str)
+{
+    std::cout << str << std::endl;
+}
+
+int main()
+{
+    std::string str = "Hello, world!";
+    std::string_view substr = str.substr(0, 5);
+    printSubstring(substr); // Prints "Hello"
+    return 0;
+}
+
+In this example, we create a std::string object str and a std::string_view object substr that points to the first 5 characters of str. We then pass substr to the printSubstring() function, which accepts a std::string_view parameter and prints the substring. Since std::string_view is a lightweight object that only contains a pointer to the original string and its length, no new memory is allocated or copied.
+
+[[fallthrough]] and [[nodiscard]] attributes:
+=============================================
+[[fallthrough]] and [[nodiscard]] are C++11 attributes that can be applied to statements and functions, respectively.
+
+[[fallthrough]] is used to signal to the compiler that a fallthrough in a switch statement is intentional and not a mistake. A fallthrough occurs when control flow falls from one case label to the next without an intervening break statement. When [[fallthrough]] is used before a statement, the compiler will not emit a warning for the fallthrough.
+
+switch (x)
+{
+    case 0:
+        do_something();
+        [[fallthrough]];
+    case 1:
+        do_something_else();
+        break;
+    default:
+        break;
+}
+In this example, we use [[fallthrough]] before the case 1: label to signal to the compiler that the fallthrough is intentional and that we want to execute the do_something_else() function for both case 0: and case 1:.
+
+
+[[nodiscard]] is used to indicate that a function's return value should not be ignored. When [[nodiscard]] is used before a function declaration, the compiler will emit a warning if the function's return value is not used.
+
+[[nodiscard]] int do_something();
+int main()
+{
+    do_something(); // Warning: Ignoring return value of function declared with nodiscard attribute
+    return 0;
+}
+In this example, we declare the do_something() function with the [[nodiscard]] attribute, indicating that its return value should not be ignored. When the do_something() function is called in main(), the compiler will emit a warning if its return value is not used.
+===============================================================================================================================================================================
+
+C++17 introduced several new features and improvements to the language, including:
+===============================================================================
+Structured bindings: a way to unpack tuples and other aggregates into individual variables using a concise syntax.
+
+if and switch with initializer: the ability to declare and initialize variables within the condition of an if or switch statement.
+
+constexpr if: a new way to conditionally compile code based on a compile-time expression.
+
+Fold expressions: a way to apply a binary operator to a pack of arguments in a single expression.
+template<typename... Ts>
+int sum(Ts... args)
+{
+    return (... + args);
+}
+
+int main()
+{
+    int result = sum(1, 2, 3, 4, 5);
+    // result is 1 + 2 + 3 + 4 + 5
+In this example, the sum() function uses a fold expression (args + ...) to sum a pack of integers. The ... is called a fold operator, and it folds the binary operator + over the pack of arguments args. The expression (args + ...) expands to (1 + (2 + (3 + (4 + 5)))), which evaluates to 15.
+Fold expressions are a powerful way to apply binary operators to packs of arguments in a single expression. They can be used with a wide range of operators, including arithmetic operators, logical operators, and bitwise operators.
+
+Class template argument deduction: (auto) the ability to deduce template arguments for a class template from the constructor arguments.
+Here's an example of how class template argument deduction can be used to simplify code that creates a vector:
+#include <vector>
+
+int main()
+{
+    auto vec = std::vector{1, 2, 3, 4, 5};
+    // vec is std::vector<int>
+    return 0;
+}
+In this example, we use class template argument deduction to create a std::vector<int> without specifying the template argument explicitly. The auto keyword tells the compiler to deduce the type of the std::vector from the type of the initializer list {1, 2, 3, 4, 5}.
+
+inline variables: the ability to define variables inside header files without violating the one-definition rule.
+Prior to C++17, if you wanted to define a variable inside a header file, you would need to declare it as extern and define it in a single translation unit. This often resulted in multiple definition errors if the header file was included in multiple translation units.
+// example.h
+#pragma once
+
+inline int counter = 0;
+
+In this example, we define an inline variable counter inside the header file example.h. The inline keyword tells the compiler that it is safe to define the variable in multiple translation units, as long as all definitions are identical. This means that we can include the example.h header file in multiple source files without causing multiple definition errors.
+Inline variables can simplify code and make it easier to define small, frequently used variables inside a header file. However, they should be used with care, as they can increase the size of your executable if used excessively.
+
+std::optional: a class template that represents a value that may or may not exist.
+
+std::variant: a class template that represents a value that can have one of several alternative types.
+
+Filesystem library: a standardized library for manipulating files, directories, and paths.
+
+Parallel algorithms: new standard algorithms that can be executed in parallel using multiple threads.
+
+constexpr lambda expressions: the ability to declare lambda functions as constexpr.
