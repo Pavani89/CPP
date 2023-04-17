@@ -84,9 +84,9 @@ can be accessed directly
 C++ treats an array name as the location in memory of first array element
 
 characteristics:
-fixed sizeofstored contiguously in memory
+fixed size of stored contiguously in memory
 first element in index 0
-last - size - 1
+last = size - 1
 
 initialization:
 Element_Type array_name [element_index] {}; //elements = element_index - 1
@@ -168,8 +168,8 @@ the value on right hand side to the left hand side
 Increment operator ++
 Decrement operator --
 
-Prefix ++num  
-Postfix num++
+Prefix ++num     //increment then assign
+Postfix num++    // assign and then increment
 
 c = ++num //c = num + 1
 c= num++  //c = num
@@ -191,7 +191,7 @@ Logical operator can use keywords - not, and, or - but not seen in common code, 
 e.g:  num1 >= 10 && num1 < 20
 
 operator precedence -> check notes or https://en.cppreference.com/w/cpp/language/operator_precedence
-========================================================================================================================
+==============================================================================================================
 Control statemnt:
 
 if - else if - else:
@@ -256,7 +256,7 @@ do-while loop  //expression checked in the end  - common menu driven program
 do {
 	statements;
 } while (expression);
-========================================================================================================================
+==============================================================================================================
 Characters and Strings:
 =======================
 
@@ -297,7 +297,7 @@ C++ Strings:
 ------------
 std:string is Standard Template Library Class
 #include <string>
-contiguously memory, dynamic, wotk with string IO Streams
+contiguously memory, dynamic, work with string IO Streams
 
 eg: string s1; //Empty , not garbage.
 s1 = "C++"; //C++ //assignment
@@ -316,9 +316,9 @@ substr() //Extract sub string
 eg: s1.substr(0,4);
 
 find()  //returns index of the substring
-npos -> returned if string not found
+npos -> returned if string not found   //spelt as nposition it means what you were searching for is not there
 eg: 
-string word {" This is Sparta};
+string word {"This is Sparta"};
 size_t position = word.find(is);
 if (position != string::npos){
 	cout << "Found!"
@@ -332,9 +332,9 @@ getline(cin, var_name) //NOTE: signature is different from C-Style
 
 //substring
 unformatted_full_name.substr(0,7)
-========================================================================================================================
+==============================================================================================================
 C++ Functions:
-===============
+==============
 c++ has many predefined library with global functions
 
 eg:
@@ -342,7 +342,14 @@ eg:
 sqrt, pow 
 
 <cstdlib>
-rand // random numbner generator
+rand() // random numbner generator
+
+use seed random generator to control the random sequence.
+use #include <cstdlib>
+and #include <ctime>
+srand(time(nullptr))    // by doing this we can ensure unique sequences being generated
+//seeding with system time
+
 
 Function parameters:
 In the function definition they are called parameters    // int sum(int, int);            
@@ -371,12 +378,30 @@ acheived by location or address of the actual parameter. by passing &
 since it uses the address location(does not copy variable, it is faster)
 
 
-static variable - it is a gobal variable local to a function
+local variables:
+available/active with in a block scope or function
+NOT preserved between function calls
+With nested blocks, inner block can see out, but outer blocks cannot see in
+
+static (local) variable:
+static int  value {10};
+IS preserved between functions calls and live in lifetime of the program
+it is a gobal variable local to a function
+Only initislised once, if not initiazed they are set to zero/null
+
+global variables:
+declared outside any function or class
+visible to all parts of the program after the global identified is delcared
+global constants are OK, but global variables should be avoided
+
 
 function call stack - Last In First Out
 push and pop
 
 inline function: by default compiler treats functions inline which helps ease the space, stack manamagemnt.
+faster execution.
+
+syntax:
 inline int add(int a, int b) {
 	return a + b;
 }
@@ -386,20 +411,29 @@ https://cplusplus.com/articles/G3wTURfi/
 recursive functions:
 function that directly or indirectly calls itself.
 make sure there is a base case to exit the recursive case
-========================================================================================================================
+==============================================================================================================
 Pointers and References:
 * helps edit some assemblies on the device
 
 Pointer is a variable whose value is an address of another variable or function.
 pointers are read right to left
 
-variable_type *pointer_name {nullptr}; //needs to be initilised to 'point nowhere' -> null pointer
+variable_type *pointer_name {nullptr}; //needs to be initilised to 'point nowhere' -> null pointer (C++11)
 
 int *int_ptr  {nullptr};
 
-& the address operator;  
+& the address operator;  //unary operator
 
 size of pointer irrespective of the variable it points // default is 4 bytes 
+
+example:
+int *p;
+cout << p; //0x61ff60 - garbage address
+cout << &p; // Address of p - 0x61ff18
+cout << sizeof p ; // 4 bytes
+p = nullptr;   //set p to point nowhere
+cout << p; // 0 
+
 
 dereference a pointer:
 Dereferencing is getting at the pointed value. Pointer variables are useful for walking the contents of a linked list data structure, using a dynamic jump table to subroutines, and passing arguments by address (so only an address is passed) rather than by value (where the entire data structure is copied)
@@ -2280,3 +2314,5 @@ int main (){
     return 0;    
 }
 ==============================================================================
+https://talentgrid.io/c-interview-questions-answers/
+
